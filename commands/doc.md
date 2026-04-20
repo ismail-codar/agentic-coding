@@ -117,7 +117,7 @@ anahtar_kelimeler: [kelime1, kelime2, kelime3]
 > **Bu bölüm bilinçli olarak kısa tutulmuştur. Bir Claude oturumu sadece bu bölümü okuyarak basit değişiklikler yapabilmelidir.**
 
 [Kategoriye göre içerik — aşağıda]
-```
+````
 
 #### 5b. Kategoriye Özel İçerik Bölümleri
 
@@ -355,7 +355,7 @@ module-root/
 
 #### 5c. Ortak Alt Kısım (Tüm Kategoriler)
 
-```markdown
+````markdown
 ## 🔌 Bağımlılıklar
 
 **İç bağımlılıklar:**
@@ -377,9 +377,42 @@ module-root/
 
 <Varsayımlar, bilinen limitasyonlar, TODO'lar, refactor adayları, tarihsel context. Opsiyonel.>
 
+## 🩺 Eksiklikler, Yanlışlıklar ve İyileştirme Önerileri
+
+> **Bu bölüm opsiyonel değildir.** İnceleme sırasında mevcut implementasyonda eksik, hatalı, riskli veya iyileştirilebilir bir nokta gördüysen mutlaka buraya yaz.
+
+- **Bulgu:** <sorun veya iyileştirme fırsatı>
+  - **Etki:** <neden önemli>
+  - **Öneri:** <nasıl düzeltilmeli>
+  - **Referans:** `<dosya:satır>`
+
+> Tespit yoksa açıkça `Bu inceleme kapsamında belirgin bir eksiklik veya iyileştirme ihtiyacı tespit edilmedi.` yaz.
+
+## 🤖 Yeniden Değerlendirme İçin LLM Prompt'u
+
+Aşağıdaki bölümü, bu alanı devralacak başka bir LLM oturumunun hızlıca bağlam kazanması için doldur:
+
+```text
+Bu dokümanı temel alarak `<konu>` alanını yeniden değerlendir.
+
+Odaklan:
+1. Dokümandaki akış/modül/mimari anlatımında eksik veya zayıf kalan noktaları bul.
+2. `## 🩺 Eksiklikler, Yanlışlıklar ve İyileştirme Önerileri` bölümündeki her maddeyi kodda doğrula.
+3. Gerekirse ilgili dosyalarda ek referanslar topla ve dokümanı güncelle.
+4. Davranışsal risk, edge-case, test açığı ve refactor fırsatlarını özellikle ara.
+5. Sonuçta:
+   - doğruladığın bulguları netleştir,
+   - yanlış olanları ayıkla,
+   - yeni bulgular ekle,
+   - "Hızlı Referans" bölümünü gerekiyorsa daha uygulanabilir hale getir.
+
+Çıktı verirken her önemli iddiayı `dosya:satır` referansı ile destekle.
+````
+
 ---
 
 *Bu doküman `/doc` komutu ile otomatik üretilmiştir. Kategori: `<kategori>`. Kod değiştiğinde güncellenmelidir.*
+
 ```
 
 ### 6. Yazım Kalitesi Kuralları
@@ -390,16 +423,41 @@ module-root/
 - **Boş bölümleri atla veya "Bu alanda veri yok" yaz** — şablonu boş placeholder'larla doldurma
 - **Türkçe yaz** — kullanıcının dili Türkçe
 - **Emoji'leri başlıklarda koru** — görsel tarama hızı için
+- **İyileştirme önerilerini yüzeysel bırakma.** Her öneri mümkünse etki + öneri + referans ile yazılmalı
+- **LLM prompt'unu genel geçer yazma.** İncelenen konuya ve bulunan risklere özgü hale getir
 
-### 7. Dosyayı Yaz
+### 7. Eksiklik, Yanlışlık ya da İyileştirme Önerilerini Yaz
+
+Araştırma sırasında mevcut implementasyonda bir eksiklik, yanlışlık, tutarsızlık, risk veya iyileştirme fırsatı gördüysen bunu üretilen dokümanda mutlaka `## 🩺 Eksiklikler, Yanlışlıklar ve İyileştirme Önerileri` başlığı altında listele.
+
+Bu bölümde:
+- Sorunun kendisini kısa ve net tarif et
+- Neden önemli olduğunu belirt
+- Mümkünse uygulanabilir çözüm öner
+- Her maddeyi en az bir `dosya:satır` referansı ile destekle
+- Gerçekten bulgu yoksa bunu açıkça belirt; bölümü sessizce atlama
+
+### 8. 🤖 Yeniden Değerlendirme İçin LLM Prompt'u
+
+Üretilen dokümanın sonuna, o konu için özelleştirilmiş bir `## 🤖 Yeniden Değerlendirme İçin LLM Prompt'u` bölümü ekle.
+
+Bu prompt:
+- Sonraki oturumun dokümanı eleştirel gözle tekrar incelemesini istemeli
+- Özellikle bulunan riskleri, test açıklarını, edge-case'leri ve eksik referansları yeniden kontrol ettirmeli
+- Gerekirse dokümanı güncelleyecek kadar somut yönlendirme içermeli
+- İncelenen konu adını ve mümkünse kritik dosya/katman isimlerini içermeli
+
+### 9. Dosyayı Yaz
 
 Dosyayı `docs/claude/<kategori-klasörü>/<dosya_adi>.md` yoluna Write tool ile kaydet.
 
-### 8. Özet Sun
+### 10. Özet Sun
 
 Yanıt olarak kullanıcıya şunu göster:
 - 🏷️ **Seçilen kategori** ve (prefix verilmediyse) neden bu kategoriyi seçtiğin
 - ✅ Oluşturulan dosyanın tam yolu
 - 📊 Araştırmada incelenen dosya sayısı
 - 🎯 Dokümantasyonun "Hızlı Referans" bölümünün içeriği
+- 🩺 Tespit ettiğin en önemli eksiklik / iyileştirme önerisi (varsa)
+- 🤖 Eklediğin yeniden değerlendirme prompt'unun kısa özeti
 - 💡 Sonraki oturumlarda bu dosyayı `@docs/claude/<kategori>/<dosya>.md` ile context'e ekleyebileceğini hatırlat
