@@ -112,7 +112,7 @@ Her doküman odaklı olduğunda Claude sadece gerekeni context'e alır — token
 
 Kod değişince ilgili doküman outdated olur. İki yaklaşım:
 1. Yeni `/doc` çalıştır, eski dosyayı sil (yeni tarih damgası zaten ayırt eder)
-2. Eski dosyayı `_eski_DD-MM-YYYY` suffix'i ile arşivle
+2. Eski dosyayı `_eski_dosya-adi` suffix'i ile arşivle
 
 Front-matter'daki `commit` hash'i hangi commit'te üretildiğini söyler — doküman gerçekten eski mi anlamak için yardımcı olur.
 

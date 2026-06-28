@@ -5,7 +5,7 @@ Kullanıcının isteğine göre bir plan klasörü oluştur ve aşağıdaki dosy
 ### 1) Klasör oluştur
 Şu formatta bir klasör oluştur:
 
-`plans/DD.MM.YYYY HH_MM_SS - kisa-aciklama`
+`plans/YYYY.MM.DD_HH_MM_SS➖kisa-aciklama`
 
 Tarih için:
 ```bash

@@ -86,7 +86,7 @@ Konuyu kod tabanında sistematik olarak araştır. **Kategori araştırma odağ�
 
 ### 4. Dosya Adı
 
-Format: `dd-MM-yyyy_HH-mm-ss - kısa-açıklama.md`
+Format: `YYYY.MM.DD_HH_MM_SS➖kısa-açıklama.md`
 
 - Tarih kısmını `date` çıktısından al
 - "kısa-açıklama": konuyu 3-6 kelimeyle özetleyen, türkçe karakter ve özel karakter içermeyen, kebab-case bir metin (örnek: `auth-login-akisi`, `odeme-webhook-islemi`)
