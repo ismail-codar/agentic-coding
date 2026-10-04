@@ -89,19 +89,20 @@ Items in classes 2, 3, 4, and 7 are archive candidates. Items in classes 1, 5, a
 
 ## Choose the Target Structure
 
-Prefer the repository's existing conventions for the active side. When no suitable convention exists, use:
+Prefer the repository's existing conventions for the active side, including wherever and however the user keeps plans. When no suitable convention exists, suggest (do not impose) a layout such as:
 
 ```text
 PROJECT_STATE.md
 DECISIONS.md
-plans/
-  active/
+<plans location>/          # e.g. docs/plans/ for ce-plan, or the user's own
 docs/
   history/
 _archive/
   ARCHIVE.md
-  plans/
-    <plan-name>/
+  <plans location>/
+    <plan-name>.md            # single-file plan, archived as-is
+    <plan-name>.SUMMARY.md
+    <plan-name>/              # or a multi-file plan folder
       SUMMARY.md
       ...original files...
   docs/
@@ -180,13 +181,13 @@ Merge duplicates carefully. Mark changed or retired decisions rather than silent
 
 Keep genuinely active work in the active plan location.
 
-Archive plans only when evidence clearly shows they are completed, cancelled, or superseded. Move the whole plan folder into `_archive/plans/` with its original name to avoid broken references and loss of chronology.
+Archive plans only when evidence clearly shows they are completed, cancelled, or superseded. Move the plan (a single file or a whole folder) into `_archive/` under its original relative path and name to avoid broken references and loss of chronology.
 
-For every archived plan folder, create or update a concise `SUMMARY.md` using `references/document-templates.md`. Summarize outcomes rather than copying the entire history.
+For every archived plan, create or update a concise `SUMMARY.md` using `references/document-templates.md`. For a single-file plan, place it next to the archived file as `<plan-name>.SUMMARY.md`. Summarize outcomes rather than copying the entire history.
 
 Preserve unresolved items by moving them into an active plan, current-state document, issue tracker reference, or the archived plan's open-items section.
 
-When the repository uses the plan-driven structure with `prompt.md`, `spec.md`, `implementation.md`, and `progress.md`, move those files into the archive unchanged alongside `SUMMARY.md`.
+Do not assume or impose a plan format. Plans may be single files (for example `ce-plan` output under `docs/plans/`), multi-file folders, or any other structure the user prefers; archive whatever files make up the plan unchanged.
 
 ## Archive Manifest
 

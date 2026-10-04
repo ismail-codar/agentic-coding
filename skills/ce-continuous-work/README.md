@@ -24,11 +24,11 @@ cp -r skills/ce-continuous-work <proje>/.claude/skills/ce-continuous-work
 
 Zorunlu değil; eksik alanlar algılanır (`SKILL.md` → "Proje uyarlaması").
 Algılama tutmayan ya da varsayılanı beğenmeyen proje `.claude/ce-continuous-work.json`
-yazar — örnek: `ce-continuous-work.example.json`.
+yazar — örnek: `SKILL.md` → "Yapılandırma dosyası".
 
 İki ön koşul **algılanamazsa tur durur**:
 
-- `test_command` — tam test komutu. `run-all-tests.sh`, `make test`,
+- `test_command` — tam test komutu. `make test`,
   `package.json` `scripts.test`, `pytest`, `cargo test`, `go test ./...`
   denenir; hiçbiri yoksa yazılmalı.
 - `state_dir` (varsayılan `out/continuous-work/`) **gitignore'lu** olmalı.

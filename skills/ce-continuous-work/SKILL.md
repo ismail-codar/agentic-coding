@@ -2,7 +2,7 @@
 name: ce-continuous-work
 description: >-
   Verilen bir uygulama planını uçtan uca, kullanıcıya HİÇ SORMADAN uygular — dal açar, moda göre planı `ce-doc-review` ile ön incelemeden geçirir, fazları sırayla `ce-work` ile koşar, moda göre inceleme ve sadeleştirme yapar, projenin tam test kapısından geçirir, ana dala merge eder (yerel ya da PR), öğrenimi yakalar, sonra dalı ve plan dosyasını siler. Her fazı ayrı bir `claude -p` alt sürecinde koşturarak ana oturum bağlamını düz tutar. Proje-bağımsızdır; test komutu, plan dizini, durum dosyaları `.claude/ce-continuous-work.json` ile ya da otomatik algılamayla çözülür. Tetik: /ce-continuous-work \<plan-yolu\> [low|middle|high].
-argument-hint: "<plan-yolu> [low|middle|high]  (varsayılan: middle)"
+argument-hint: "<plan-yolu> [low|middle|high]  (varsayılan: low)"
 ---
 
 # ce-continuous-work
@@ -70,16 +70,14 @@ Proje kökünde `.claude/ce-continuous-work.json`:
 
 ```json
 {
-  "test_command": "./run-all-tests.sh",
+  "test_command": "make test",
   "plans_dir": "docs/plans",
   "state_dir": "out/continuous-work",
   "main_branch": "main",
   "merge": "local",
-  "learning_files": ["PROJECT_STATE.md", "DECISIONS.md"],
+  "learning_files": [],
   "residual_targets": {
     "decision": "docs/open-decisions/",
-    "open_work": "PROJECT_STATE.md",
-    "binding_decision": "DECISIONS.md",
     "fallback": "docs/follow-ups/"
   },
   "plan_headings": "auto"
@@ -94,13 +92,13 @@ notu düşülür.
 
 | alan | algılama sırası | hiçbiri yoksa |
 |---|---|---|
-| `test_command` | `./run-all-tests.sh` → `Makefile` içinde `test:` hedefi (`make test`) → `package.json` `scripts.test` (`npm test` / `pnpm test` / `bun test`, lock dosyasına göre) → `pyproject.toml`/`pytest.ini`/`tests/` (`pytest` ya da `uv run pytest`) → `Cargo.toml` (`cargo test`) → `go.mod` (`go test ./...`) | **DUR** — kapısız gözetimsiz merge yasak; kullanıcıya `test_command` yazmasını söyle |
+| `test_command` | `Makefile` içinde `test:` hedefi (`make test`) → `package.json` `scripts.test` (`npm test` / `pnpm test` / `bun test`, lock dosyasına göre) → `pyproject.toml`/`pytest.ini`/`tests/` (`pytest` ya da `uv run pytest`) → `Cargo.toml` (`cargo test`) → `go.mod` (`go test ./...`) | **DUR** — kapısız gözetimsiz merge yasak; kullanıcıya `test_command` yazmasını söyle |
 | `plans_dir` | `docs/plans/` varsa o; yoksa verilen plan yolunun dizini | plan yolunun dizini |
 | `state_dir` | `out/continuous-work/` | aynı; **gitignore'lu olmalı** (bkz. aşağı) |
 | `main_branch` | `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master` | **DUR** |
 | `merge` | `gh` kurulu **ve** `.github/workflows/` var → `pr`; aksi halde `local` | `local` |
-| `learning_files` | kökte `PROJECT_STATE.md`, `DECISIONS.md`, `STATE.md`, `ROADMAP.md` hangileri varsa | boş liste — Faz 6 yalnız `ce-compound` koşar |
-| `residual_targets` | `docs/open-decisions/` varsa `decision` oraya; `learning_files` içinde `PROJECT_STATE.md`/`DECISIONS.md` varsa `open_work`/`binding_decision` oraya | hepsi `fallback`: `docs/follow-ups/<plan-slug>.md` |
+| `learning_files` | kökte `STATE.md`, `ROADMAP.md` hangileri varsa | boş liste — Faz 6 yalnız `ce-compound` koşar |
+| `residual_targets` | `docs/open-decisions/` varsa `decision` oraya; `open_work`/`binding_decision` yalnız yapılandırmayla | hepsi `fallback`: `docs/follow-ups/<plan-slug>.md` |
 | `plan_headings` | plan dosyasında hangi dil geçiyorsa (İngilizce `## Implementation Units` / `### Phase N` / `## Verification Contract` / `## Open Questions` / `## Deferred to Follow-Up Work` **ya da** Türkçe `## Uygulama Üniteleri` / `### Faz N` / `## Doğrulama Sözleşmesi` / `## Açık sorular`) | İngilizce (ce-plan varsayılanı) |
 
 `state_dir` için ek koşul: `git check-ignore -q <state_dir>` **başarısızsa
@@ -126,7 +124,7 @@ Aşağıda `<run-phase>` bu çözülmüş yoldur.
 `$ARGUMENTS`'tan ayrıştır:
 
 - **plan yolu** (zorunlu) — `<plans_dir>` altında bir dosya.
-- **mod** (opsiyonel) — `low` | `middle` | `high`. Belirtilmezse **`middle`**.
+- **mod** (opsiyonel) — `low` | `middle` | `high`. Belirtilmezse **`low`**.
 
 Plan yolu verilmemişse **dur ve söyle**; en son planı tahmin etme (yanlış planı
 uçtan uca uygulamak bu turun en pahalı hatasıdır).
@@ -146,8 +144,8 @@ tur açmak, kimin neyi yazdığını ayırt edilemez hale getirir.
 
 | mod | `ce-simplify-code` | kod incelemesi | plan ön incelemesi |
 |---|---|---|---|
-| `low` | yok | yok | **yok — Faz 2.5 atlanır** |
-| `middle` *(varsayılan)* | yok | `ce-code-review` — **low kademe** | **low kademe** |
+| `low` *(varsayılan)* | yok | yok | **yok — Faz 2.5 atlanır** |
+| `middle` | yok | `ce-code-review` — **low kademe** | **low kademe** |
 | `high` | var, incelemeden **önce** | `ce-code-review depth:full` | **high kademe** |
 
 Merdiven iki kolu birden ayarlar: kod incelemesinin derinliğini **ve** Faz

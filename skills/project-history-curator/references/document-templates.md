@@ -68,13 +68,10 @@ Completed | Cancelled | Superseded
 ## Archive Reason
 
 ## Original Location
-`plans/<plan-name>/`
+`<original plan path>`
 
 ## Source Files
-- `prompt.md`
-- `spec.md`
-- `implementation.md`
-- `progress.md`
+- List the archived plan files as they exist; do not assume a fixed set.
 ```
 
 ## Archive Manifest
@@ -88,7 +85,7 @@ Nothing in `_archive/` is deleted by the curator. Move an entry back with `git m
 
 | Archived | Original Path | Archive Path | Classification | Reason | Preserved In | Reference Check |
 |---|---|---|---|---|---|---|
-| YYYY-MM-DD | `plans/old-plan/` | `_archive/plans/old-plan/` | Completed | Explanation | `PROJECT_STATE.md`, `SUMMARY.md` | 2 links updated |
+| YYYY-MM-DD | `docs/plans/old-plan.md` | `_archive/docs/plans/old-plan.md` | Completed | Explanation | `PROJECT_STATE.md`, `SUMMARY.md` | 2 links updated |
 ```
 
 ## VS Code Search Exclusion
