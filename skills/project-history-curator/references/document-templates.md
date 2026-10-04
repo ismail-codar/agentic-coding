@@ -67,6 +67,9 @@ Completed | Cancelled | Superseded
 
 ## Archive Reason
 
+## Original Location
+`plans/<plan-name>/`
+
 ## Source Files
 - `prompt.md`
 - `spec.md`
@@ -74,14 +77,32 @@ Completed | Cancelled | Superseded
 - `progress.md`
 ```
 
-## Deletion Candidate Report
+## Archive Manifest
+
+Lives at `_archive/ARCHIVE.md`. Append a row for every move; never delete rows.
 
 ```md
-# Deletion Candidates
+# Archive Manifest
 
-No file in this list may be deleted without explicit user approval.
+Nothing in `_archive/` is deleted by the curator. Move an entry back with `git mv` if it is needed again.
 
-| Path | Classification | Reason | Preserved In | Reference Check | Risk |
-|---|---|---|---|---|---|
-| `path` | Duplicate | Explanation | `SUMMARY.md` | No references found | Low |
+| Archived | Original Path | Archive Path | Classification | Reason | Preserved In | Reference Check |
+|---|---|---|---|---|---|---|
+| YYYY-MM-DD | `plans/old-plan/` | `_archive/plans/old-plan/` | Completed | Explanation | `PROJECT_STATE.md`, `SUMMARY.md` | 2 links updated |
+```
+
+## VS Code Search Exclusion
+
+Merge into the target repository's `.vscode/settings.json`. Keep every existing key.
+
+```json
+{
+  "search.exclude": {
+    "**/_archive": true,
+    "**/_archive/**": true
+  },
+  "files.watcherExclude": {
+    "**/_archive/**": true
+  }
+}
 ```

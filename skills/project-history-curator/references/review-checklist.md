@@ -15,10 +15,17 @@
 
 ## Safety
 
-- No unapproved permanent deletion occurred.
-- Deletion candidates identify where information was preserved.
+- No file was deleted; `git status` shows only renames, additions, and modifications.
+- Every moved item has a row in `_archive/ARCHIVE.md` stating where its information was preserved.
 - References to moved files were searched and repaired where possible.
 - Git history was not assumed to be the sole backup.
+
+## Archive Hygiene
+
+- Archived items live under the root `_archive/` with their original relative path.
+- `.vscode/settings.json` excludes `_archive` from search; other settings are untouched.
+- `_archive/` is not in `.gitignore` and not in `files.exclude`.
+- Agent instruction files say `_archive/` is read only on explicit request.
 
 ## Scope
 

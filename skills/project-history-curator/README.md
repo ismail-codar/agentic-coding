@@ -2,6 +2,8 @@
 
 A portable Agent Skill for safely consolidating long-running software project history.
 
+It never deletes files. Completed, cancelled, superseded, or duplicate material is moved into a root `_archive/` folder with a manifest, and the target repository's `.vscode/settings.json` is updated so `_archive/` stays out of VS Code search.
+
 ## Compatibility
 
 This package uses the shared `SKILL.md` Agent Skills format and is compatible with:
@@ -39,4 +41,4 @@ Upload the ZIP as a custom Skill. The archive contains one skill folder with `SK
 
 - "Bu projedeki eski planları özetle ve tamamlananları güvenli şekilde arşivle."
 - "Consolidate this repository's project history and preserve important decisions."
-- "Review deletion candidates, but do not permanently delete anything without my approval."
+- "Move stale notes and finished plans into `_archive/` and keep them out of workspace search."

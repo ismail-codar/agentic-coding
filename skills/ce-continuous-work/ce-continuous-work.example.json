@@ -1,0 +1,15 @@
+{
+  "test_command": "./run-all-tests.sh",
+  "plans_dir": "docs/plans",
+  "state_dir": "out/continuous-work",
+  "main_branch": "main",
+  "merge": "local",
+  "learning_files": ["PROJECT_STATE.md", "DECISIONS.md"],
+  "residual_targets": {
+    "decision": "docs/open-decisions/",
+    "open_work": "PROJECT_STATE.md",
+    "binding_decision": "DECISIONS.md",
+    "fallback": "docs/follow-ups/"
+  },
+  "plan_headings": "auto"
+}
