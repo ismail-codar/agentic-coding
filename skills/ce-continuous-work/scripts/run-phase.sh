@@ -73,6 +73,21 @@
 # CE_PROGRESS_LOG'a (varsayılan `<zarf-dizini>/progress.log`) ve stderr'e yazar.
 # `<asama>.out` yine düz metin kalır (akışın `result` metni + stderr).
 # CE_STREAM=0 eski düz-metin koşuma döner (nabız yalnız dosya listesi basar).
+#
+# ARKA PLAN TUZAĞI (kayıtsız aşamanın baş sebebi): `claude -p` gözetimsizdir ve
+# model turunu bitirdiği anda süreç kapanır. Alt süreç bir komutu arka plana
+# atıp (`run_in_background`, `Monitor`, `ScheduleWakeup`) "bildirim gelince
+# devam ederim" deyip turu bitirirse bildirim HİÇ gelmez, zarf yazılmaz.
+# Modeli arka plana iten şey ön plan Bash'inin 10 dk üst sınırıdır — yük
+# altındaki makinede tam test seti bunu aşar. Üç katmanlı önlem:
+#   1. BASH_MAX_TIMEOUT_MS / BASH_DEFAULT_TIMEOUT_MS alt sürece yükseltilir
+#      (varsayılan 90 dk; CE_BASH_TIMEOUT_MS ile değişir) — arka plana geçmek
+#      için sebep kalmaz. Projenin settings.json `env` bloğu bunu ezebilir.
+#   2. `Monitor` ve `ScheduleWakeup` alt süreçte `--disallowedTools` ile
+#      kapatılır. Bash'in `run_in_background` parametresi araç düzeyinde
+#      kapatılamaz — o kısım 3. katmana kalır.
+#   3. Ön plan kuralı `--append-system-prompt` ile HER aşamaya (kurtarma
+#      dahil) betik tarafından eklenir; çağıranın prompt'una bağlı değildir.
 
 set -euo pipefail
 
@@ -137,7 +152,17 @@ if [ -z "$session_id" ]; then
   fi
 fi
 
-cmd=("$claude_bin" -p)
+bash_timeout_ms="${CE_BASH_TIMEOUT_MS:-5400000}"
+export BASH_MAX_TIMEOUT_MS="${BASH_MAX_TIMEOUT_MS:-$bash_timeout_ms}"
+export BASH_DEFAULT_TIMEOUT_MS="${BASH_DEFAULT_TIMEOUT_MS:-$bash_timeout_ms}"
+
+foreground_rule="GÖZETİMSİZ ALT SÜREÇ KURALI: Bu oturum 'claude -p' ile koşuyor; turunu bitirdiğin an süreç kapanır ve hiçbir arka plan bildirimi sana ULAŞMAZ. Bu yüzden: Bash'i asla run_in_background ile çağırma; Monitor, ScheduleWakeup ya da 'bildirim gelince devam ederim' türü bekleme kullanma. Uzun komutları (tam test seti dahil) ön planda koş ve timeout parametresine ${BASH_MAX_TIMEOUT_MS} ms'ye kadar değer ver. Turunu ancak iş bittiğinde ve sonuç zarfı yazıldığında bitir."
+
+# --disallowedTools değişkenli (variadic) bir bayraktır: ardından mutlaka
+# başka bir seçenek gelmeli, yoksa prompt argümanını araç adı sanıp yutar.
+base_flags=(--disallowedTools "Monitor,ScheduleWakeup" --append-system-prompt "$foreground_rule")
+
+cmd=("$claude_bin" -p "${base_flags[@]}")
 [ -n "$model" ] && cmd+=(--model "$model")
 [ -n "$perm" ] && cmd+=(--permission-mode "$perm")
 [ -n "$session_id" ] && cmd+=(--session-id "$session_id")
@@ -210,7 +235,7 @@ kötüdür.)
 $prompt
 EOF
 )"
-  rcmd=("$claude_bin" -p --resume "$session_id")
+  rcmd=("$claude_bin" -p "${base_flags[@]}" --resume "$session_id")
   [ -n "$model" ] && rcmd+=(--model "$model")
   [ -n "$perm" ] && rcmd+=(--permission-mode "$perm")
   set +e

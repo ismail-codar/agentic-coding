@@ -402,6 +402,28 @@ sonuçları, `blocker` listesi, `behavior_change` ve varsa `verification_evidenc
 çıkış 3 = **kayıtsız aşama** (süreç 0 döndü, zarf yazılmadı ve kurtarma da
 tutmadı). Hiçbirini başarı sayma.
 
+### Arka plan tuzağı — alt süreç ön planda bekler
+
+Kayıtsız aşamanın baş sebebi: `claude -p` gözetimsizdir, model turunu bitirdiği
+an süreç kapanır. Alt süreç bir komutu arka plana atıp (`run_in_background`,
+`Monitor`, `ScheduleWakeup`) "bildirim gelince devam ederim" diyerek turu
+bitirirse bildirim **hiç gelmez** ve zarf yazılmaz. Modeli arka plana iten şey
+ön plan Bash'inin 10 dk sınırıdır — yük altında tam test seti bunu aşar.
+
+`run-phase.sh` bunu yapısal olarak kapatır (çağıranın promptuna bağlı değil):
+
+1. Alt süreç `BASH_MAX_TIMEOUT_MS`/`BASH_DEFAULT_TIMEOUT_MS` = 90 dk ile
+   başlar (`CE_BASH_TIMEOUT_MS` ile değişir). Proje `.claude/settings.json`
+   `env` bloğu bunu ezebilir — orada daha düşük bir değer varsa yükselt.
+2. `Monitor` ve `ScheduleWakeup` `--disallowedTools` ile kapalıdır.
+3. Ön plan kuralı `--append-system-prompt` ile her aşamaya (kurtarma dahil)
+   eklenir — `run_in_background` araç düzeyinde kapatılamadığı için bu katman
+   gereklidir.
+
+Ana oturumdaki "arka planda koş + `Monitor`" kuralı (bkz. "İlerleme
+bildirimi") **yalnız ana oturum içindir**; ana oturum açık kaldığı için
+bildirimleri alır. Alt sürece yazdığın promptlara bu kuralı taşıma.
+
 ### Zarf kurtarma — çıkış 3'ten ÖNCE denenir
 
 Kayıtsız aşama nadir değil: skill'in ilk geliştirildiği projede bir turda
@@ -686,6 +708,8 @@ tek ekranda raporlanır, ilgili günlük dosyalarının yolu verilir.
 ## Yapılmayacaklar
 
 - `AskUserQuestion` — hiçbir aşamada, hiçbir modda.
+- Alt süreç promptunda arka plan beklemesi (`run_in_background`, `Monitor`,
+  `ScheduleWakeup`) — süreç tur bitince kapanır, bildirim gelmez.
 - `/compact`, `/clear` çağırma girişimi — bunlar skill değil, çağrılamaz.
 - Kırmızı kapıyı geçme, testi zayıflatma, assertion'ı mock'lama.
 - Kapsam genişletme; plan dışı "bu arada şunu da düzelttim" değişiklikleri.

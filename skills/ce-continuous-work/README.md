@@ -54,6 +54,7 @@ muafiyet listesi tutuyorsa şu satırı ekle:
 | `CE_ENVELOPE_RECOVERY=0` | zarf kurtarma (`--resume`) geçişini kapat |
 | `CE_HEARTBEAT_SECS` | nabız aralığı, saniye (varsayılan 600; `0` = kapalı) |
 | `CE_PROGRESS_LOG` | ilerleme günlüğü (varsayılan `<zarf-dizini>/progress.log`) |
+| `CE_BASH_TIMEOUT_MS` | alt sürecin `BASH_MAX_TIMEOUT_MS`/`BASH_DEFAULT_TIMEOUT_MS` değeri (varsayılan 5400000 = 90 dk; ortamda zaten varsa o kullanılır) |
 | `CE_STREAM=0` | `stream-json` yerine düz metin koşum (nabızda "son işler" olmaz) |
 
 `with-heartbeat.sh <etiket> -- <komut>` aynı nabzı ana oturumdaki uzun
