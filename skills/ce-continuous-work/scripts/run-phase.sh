@@ -65,6 +65,14 @@
 #   2  `claude -p` sıfırdan farklı döndü
 #   3  süreç 0 döndü, zarf üretilmedi ve KURTARMA da başarısız oldu
 #      (aşama iş yapmış olabilir; betik ağacın değişip değişmediğini yazar)
+#
+# İLERLEME BİLDİRİMİ (nabız): Aşama sessiz koşar; kullanıcı 25+ dk hiçbir şey
+# görmedi (ölçüldü, 2026-10-04). Alt süreç `--output-format stream-json` ile
+# koşar (`<asama>.stream.jsonl`), nabız her CE_HEARTBEAT_SECS saniyede (varsayılan
+# 600) son araç çağrılarını ve aşama başından beri dokunulan dosyaları
+# CE_PROGRESS_LOG'a (varsayılan `<zarf-dizini>/progress.log`) ve stderr'e yazar.
+# `<asama>.out` yine düz metin kalır (akışın `result` metni + stderr).
+# CE_STREAM=0 eski düz-metin koşuma döner (nabız yalnız dosya listesi basar).
 
 set -euo pipefail
 
@@ -90,6 +98,12 @@ perm="${CLAUDE_PERM_MODE:-}"
 log_dir="$(dirname "$envelope_file")"
 mkdir -p "$log_dir"
 log_file="$log_dir/${stage_name}.out"
+stream_file="$log_dir/${stage_name}.stream.jsonl"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export CE_PROGRESS_LOG="${CE_PROGRESS_LOG:-$log_dir/progress.log}"
+# shellcheck source=heartbeat.sh
+source "$script_dir/heartbeat.sh"
+trap ce_heartbeat_stop EXIT
 
 # Bayat zarf, yeni koşumun eksik zarfını maskeler — önce sil.
 rm -f "$envelope_file"
@@ -105,7 +119,7 @@ fi
 
 prompt="$(cat "$prompt_file")"
 
-echo "[ce-continuous-work] aşama '$stage_name' başlıyor (izin kipi: ${perm:-proje varsayılanı})" >&2
+ce_progress "BAŞLADI aşama '$stage_name' (izin kipi: ${perm:-proje varsayılanı}; nabız: ${CE_HEARTBEAT_SECS:-600}s; günlük: $CE_PROGRESS_LOG)"
 start_time=$(date +%s)
 
 # Sabit oturum kimliği: zarf eksik kalırsa AYNI oturuma dönebilmek için şart.
@@ -128,15 +142,39 @@ cmd=("$claude_bin" -p)
 [ -n "$perm" ] && cmd+=(--permission-mode "$perm")
 [ -n "$session_id" ] && cmd+=(--session-id "$session_id")
 
+use_stream=1
+[ "${CE_STREAM:-1}" = "0" ] && use_stream=0
+[ "$use_stream" = 1 ] && cmd+=(--output-format stream-json --verbose)
+
+rm -f "$stream_file"
 set +e
-"${cmd[@]}" "$prompt" >"$log_file" 2>&1
-exit_code=$?
+if [ "$use_stream" = 1 ]; then
+  ce_heartbeat_start "$stage_name" "$stream_file"
+  "${cmd[@]}" "$prompt" >"$stream_file" 2>"$log_file.stderr"
+  exit_code=$?
+  ce_heartbeat_stop
+  # `.out` düz metin kalır: teşhis onu okur. Sonuç metni çıkarılamazsa ham
+  # akış kopyalanır — günlük asla boş kalmaz.
+  py="$(_ce_python)"
+  {
+    if [ -z "$py" ] || ! "$py" "$script_dir/progress.py" result "$stream_file" 2>/dev/null; then
+      cat "$stream_file"
+    fi
+    cat "$log_file.stderr" 2>/dev/null
+  } >"$log_file"
+  rm -f "$log_file.stderr"
+else
+  ce_heartbeat_start "$stage_name"
+  "${cmd[@]}" "$prompt" >"$log_file" 2>&1
+  exit_code=$?
+  ce_heartbeat_stop
+fi
 set -e
 
 duration=$(( $(date +%s) - start_time ))
 
 if [ "$exit_code" -ne 0 ]; then
-  echo "[ce-continuous-work] aşama '$stage_name' HATA: claude -p çıkış $exit_code (${duration}s)" >&2
+  ce_progress "HATA aşama '$stage_name': claude -p çıkış $exit_code (${duration}s)"
   echo "  günlük: $log_file" >&2
   exit 2
 fi
@@ -184,14 +222,14 @@ EOF
     echo "  kurtarma günlüğü: $recovery_log" >&2
     echo "  NOT: zarf ikinci turda yazıldı (_envelope_recovered); alanları" >&2
     echo "  aşamanın kendi hatırladığına dayanır — kritik sayıları ağaçtan doğrula." >&2
-    echo "[ce-continuous-work] aşama '$stage_name' tamam (${duration}s, kurtarma ile)" >&2
+    ce_progress "BİTTİ aşama '$stage_name' (${duration}s, zarf kurtarma ile)"
     exit 0
   fi
   echo "  kurtarma BAŞARISIZ (çıkış $recovery_code): $recovery_log" >&2
 fi
 
 if [ ! -s "$envelope_file" ]; then
-  echo "[ce-continuous-work] aşama '$stage_name' KAYITSIZ: süreç 0 döndü ama zarf yazılmadı" >&2
+  ce_progress "KAYITSIZ aşama '$stage_name': süreç 0 döndü ama zarf yazılmadı"
   echo "  beklenen zarf: $envelope_file" >&2
   echo "  günlük: $log_file" >&2
 
@@ -216,5 +254,5 @@ if [ ! -s "$envelope_file" ]; then
   exit 3
 fi
 
-echo "[ce-continuous-work] aşama '$stage_name' tamam (${duration}s) → $envelope_file" >&2
+ce_progress "BİTTİ aşama '$stage_name' (${duration}s) → $envelope_file"
 exit 0

@@ -52,3 +52,10 @@ muafiyet listesi tutuyorsa şu satırı ekle:
 | `CLAUDE_PERM_MODE` | alt sürece `--permission-mode` (boş = proje varsayılanı) |
 | `CE_SESSION_ID` | sabit oturum kimliği (boşsa üretilir) |
 | `CE_ENVELOPE_RECOVERY=0` | zarf kurtarma (`--resume`) geçişini kapat |
+| `CE_HEARTBEAT_SECS` | nabız aralığı, saniye (varsayılan 600; `0` = kapalı) |
+| `CE_PROGRESS_LOG` | ilerleme günlüğü (varsayılan `<zarf-dizini>/progress.log`) |
+| `CE_STREAM=0` | `stream-json` yerine düz metin koşum (nabızda "son işler" olmaz) |
+
+`with-heartbeat.sh <etiket> -- <komut>` aynı nabzı ana oturumdaki uzun
+komutlara (test kapısı) uygular. Konsola taşıma `Monitor` ile yapılır —
+`SKILL.md` → "İlerleme bildirimi".

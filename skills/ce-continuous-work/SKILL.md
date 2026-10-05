@@ -228,8 +228,62 @@ kazanç değil ek temizlik yükü olur.
   teşhisi ancak metin dururken yapılabilir — zarf yokken aşamanın ne yaptığını
   söyleyen tek kayıt budur)
 
+- `progress.log` — ilerleme günlüğü (nabız + aşama geçişleri; bkz. aşağı)
+- `<asama>.stream.jsonl` — alt sürecin `stream-json` akışı (nabzın "son
+  işler" satırlarının kaynağı)
+
 Durum dosyasını her aşamadan sonra güncelle. Tur yarıda kesilirse aynı
 argümanla yeniden çağrıldığında `state.json`'dan devam edilebilmeli.
+
+### İlerleme bildirimi — ZORUNLU
+
+Aşamalar alt süreçte koştuğu için kullanıcı ekranda hiçbir şey görmez — ölçüldü
+(2026-10-04): `faz1-work` 25+ dk boyunca tek satır basmadı. Tur bu yüzden
+**her `CE_HEARTBEAT_SECS` saniyede (varsayılan 600 = 10 dk)** ne yapıldığını ve
+hangi dosyalara dokunulduğunu konsola taşımak zorundadır. Mekanizma üç
+parçadır:
+
+1. **Üretici — betikler.** `run-phase.sh` alt süreci `--output-format
+   stream-json` ile koşar ve nabzı kendisi atar: son 5 araç çağrısı (`Edit
+   <yol>`, `Bash: <açıklama>`, `Skill ...`), aşama başından beri dokunulan
+   dosyalar (`git status` satırı biçiminde, en çok 15) ve `git diff
+   --shortstat`. Ana oturumda uzun koşan komutlar (Faz 4 `<test_command>`)
+   `scripts/with-heartbeat.sh <etiket> -- <komut>` ile sarılır. Hepsi
+   `CE_PROGRESS_LOG`'a yazar; betikler varsayılan olarak
+   `<state_dir>/<plan-slug>/progress.log` kullanır — `with-heartbeat.sh`
+   için bu değişkeni açıkça ver.
+2. **Taşıyıcı — `Monitor`.** Faz 2'de, ilk aşamadan önce, ana oturum günlüğü
+   izlemeye alır:
+
+   ```
+   Monitor(command: "touch <progress.log>; tail -n0 -F <progress.log>",
+           description: "ce-continuous-work <plan-slug> ilerleme",
+           timeout_ms: 1800000)
+   ```
+
+   Monitor en çok 30 dk yaşar; **süresi dolduğunda tur bitmediyse hemen
+   yeniden kur** (tur boyunca kesintisiz). Tur bitince/durunca `TaskStop` ile
+   kapat.
+3. **Aktarıcı — ana oturum.** Her Monitor olayında kullanıcıya **kısa** bir
+   durum mesajı yaz: aşama adı, geçen süre, son işler, dokunulan dosyalar
+   (olaydaki satırları özetle; uydurma ekleme). Olay yalnız model
+   bağlamına düşer, kullanıcı onu ancak senin metnin aracılığıyla görür —
+   aktarmamak, bildirimi hiç üretmemekle aynıdır.
+
+Aşamaları beklerken:
+
+- `<run-phase>` ve uzun komutlar **`run_in_background: true`** ile koşar
+  (ön planda Bash 10 dk'da zaman aşımına uğrar ve beklerken hiçbir olay
+  işlenemez). Tamamlanma bildirimi gelince zarfı oku.
+- Faz geçişlerinde (dal açıldı, faz N başladı/bitti, test kapısı, merge,
+  temizlik) ana oturum da günlüğe tek satır ekler:
+  `echo "[ce-cw $(date +%H:%M:%S)] <olay>" >> <progress.log>` — böylece
+  Monitor geçişleri de taşır.
+
+Ayar: `CE_HEARTBEAT_SECS=0` nabzı kapatır (BAŞLADI/BİTTİ satırları yine
+yazılır); `CE_STREAM=0` düz metin koşumuna döner (nabız o zaman yalnız dosya
+listesini basar). Nabız fail-soft'tur: Python yoksa "son işler" atlanır, git
+yoksa dosya listesi atlanır — aşamanın kendisi asla nabız yüzünden düşmez.
 
 ---
 
@@ -461,10 +515,12 @@ compact'in yapacağı şey burada zaten yapılmış oldu.
 
 ## Faz 4 — Tam test kapısı
 
-Tüm fazlar bittikten sonra, **commit'ten önce**:
+Tüm fazlar bittikten sonra, **commit'ten önce** (arka planda, nabızla — bkz.
+"İlerleme bildirimi"):
 
 ```
-<test_command>
+CE_PROGRESS_LOG=<state_dir>/<plan-slug>/progress.log \
+  <scripts>/with-heartbeat.sh test-kapisi -- <test_command>
 ```
 
 Hızlı/kısmi test seti bunun yerine geçmez. Kırmızıysa tur durur ve raporlar —
