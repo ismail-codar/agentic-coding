@@ -27,6 +27,13 @@
 - `_archive/` is not in `.gitignore` and not in `files.exclude`.
 - Agent instruction files say `_archive/` is read only on explicit request.
 
+## Branch Safety
+
+- No new sequential number (D-NNN, ADR-NNNN, 001-) was created; new items use `YYYY-MM-DD-<slug>`.
+- Existing numbered items were not renumbered.
+- `.gitattributes` contains `_archive/ARCHIVE.md merge=union`; no other file uses `merge=union`.
+- New `DECISIONS.md` entries are in chronological position; existing entries changed only on the `Status` line.
+
 ## Scope
 
 - No product behavior changed.

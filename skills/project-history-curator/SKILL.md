@@ -50,10 +50,23 @@ Perform these reversible actions without additional approval:
 - Repair Markdown links and documentation references affected by moves.
 - Write or update the archive manifest (`_archive/ARCHIVE.md`).
 - Configure the repository so `_archive/` is hidden from VS Code search.
+- Add `_archive/ARCHIVE.md merge=union` to `.gitattributes`.
 
 Do not treat Git history as the only backup. A repository may be shallow, squashed, exported, or not tracked. That is one more reason to move rather than delete.
 
 When status is uncertain, retain the file in place and mark it for manual review.
+
+## Branch-Safe Identifiers and Merges
+
+The skill may run on several branches in parallel. Every artifact must merge without conflicts when those branches come together.
+
+- Never create sequential numbers (`D-012`, `ADR-0007`, `001-`, "Decision 14") for new decisions, summaries, manifest rows, or files. Two branches will pick the same "next" number. Identify new items by `YYYY-MM-DD-<short-slug>`, for example `2026-10-10-auth-token-cache`. The slug comes from the title, so it differs between branches.
+- Keep existing numbered items exactly as they are. Do not renumber them, because external references may depend on those numbers.
+- If the repository strictly requires numbered ADRs (for example tooling that parses `NNNN-*.md`), do not pick a number. Write the ADR under a date-slug name and list it in the final report as "number to assign at merge time".
+- Do not rely on "next free number" or alphabetical order in a directory listing. A branch only sees its own state.
+- Treat `_archive/ARCHIVE.md` as append-only, one row per line. In the target repository, make sure `.gitattributes` contains `_archive/ARCHIVE.md merge=union` so that rows appended on different branches merge automatically. Merge this line into an existing `.gitattributes` and never overwrite the file. Do not use `merge=union` for files whose lines are edited, such as `DECISIONS.md` or `PROJECT_STATE.md`, because it would silently duplicate changed lines.
+- In `DECISIONS.md`, add new entries sorted by date at their chronological position, not always at the end of the file. Change an existing entry only on its `**Status:**` line. This keeps the edits from two branches on separate lines.
+- Before moving an item, check whether the target `_archive/` path already exists, including on the default branch (`git ls-tree <default-branch> -- <path>`). If another branch has already archived it, do not move it again. Record a note instead.
 
 ## Repository Discovery
 
@@ -254,6 +267,7 @@ Before reporting completion, verify:
 - Moved files have no known broken documentation references.
 - `_archive/ARCHIVE.md` lists every move made in this run.
 - `.vscode/settings.json` excludes `_archive` from search and no unrelated setting was changed.
+- No new sequential number was assigned; new items use `YYYY-MM-DD-<slug>`, and `.gitattributes` contains the `merge=union` line for `_archive/ARCHIVE.md`.
 - Code behavior and dependencies were not changed.
 - No file was deleted. Confirm with `git status` that there are only renames, additions, and modifications.
 - The new structure is simpler than the old one.
