@@ -129,13 +129,24 @@ Aşağıda `<run-phase>` bu çözülmüş yoldur.
 Plan yolu verilmemişse **dur ve söyle**; en son planı tahmin etme (yanlış planı
 uçtan uca uygulamak bu turun en pahalı hatasıdır).
 
-Planın frontmatter'ını oku ve şu üçünü doğrula:
+Planın frontmatter'ını ve bölüm başlıklarını oku, şunları doğrula:
 
-| alan | beklenen | değilse |
+| denetim | beklenen | değilse |
 |---|---|---|
 | `artifact_contract` | `ce-unified-plan/v1` | eski plan — devam et, uyarıyı rapora yaz |
-| `artifact_readiness` | `implementation-ready` | **DUR** — `requirements-only` ise `/ce-plan <yol>` gerektiğini söyle |
 | `execution` | `code` | **DUR** — `knowledge-work` bu turun konusu değil |
+| uygulama bölümleri | `## Implementation Units` / `## Uygulama Üniteleri` altında en az bir ünite **ve** `## Verification Contract` / `## Doğrulama Sözleşmesi` var | **DUR** — plan requirements-only'dir; `/ce-plan <yol>` gerektiğini söyle |
+| `artifact_readiness` (eski alan) | **yok** ya da `implementation-ready` | `requirements-only` ise **DUR** (yukarıdaki satırla aynı rapor); başka değer → uyarı, devam |
+
+**Hazırlık bir frontmatter alanından değil, planın İÇERİĞİnden okunur.**
+`ce-plan` 3.x `artifact_readiness` alanını artık yazmıyor, eski planlarda
+görürse de siliyor ("An old readiness label does not establish
+completeness"). Alanın varlığını zorunlu tutmak, güncel `ce-plan`in ürettiği
+her uygulanabilir planı Faz 0'da durduruyordu. Bunun ölçülmüş bir örneği
+var: 2026-10-07'de ullm planı `2026-10-07-001` tam ünite + doğrulama
+sözleşmesiyle durdu. Ayrıca planda engelleyici açık soru varsa
+(`## Open Questions` / `## Açık sorular` altında "blocking" / "engelleyici"
+işaretli bir kalem) **DUR**. Ertelenmiş (deferred) sorular durdurmaz.
 
 Çalışma ağacı kirliyse **dur** — commit'lenmemiş değişikliğin üstüne gözetimsiz
 tur açmak, kimin neyi yazdığını ayırt edilemez hale getirir.
@@ -325,7 +336,8 @@ turda etkileşimli kip yönlendirme sorusu sorar, bu skill hiçbir aşamada
   olup olmadığı.
 
 Kadronun dar tutulması bilinçli: plan zaten `ce-plan`'den geçmiş ve Faz 0
-`implementation-ready` doğrulaması yapmıştır. `adversarial` bu noktada
+içerik tabanlı hazırlık doğrulamasını (ünite + doğrulama sözleşmesi,
+engelleyici soru yok) yapmıştır. `adversarial` bu noktada
 premise'i yeniden açar — uygulamaya başlamadan önce turu tartışmaya sokar,
 `middle`'ın aradığı kapı değerini üretmez.
 
@@ -690,7 +702,7 @@ Tur şu durumlarda **durur, tahmin yürütmez**:
 |---|---|
 | `test_command` çözülemedi | kapısız gözetimsiz merge yasak |
 | `<state_dir>` gitignore'lu değil | zarflar/günlükler depoya sızar |
-| plan `requirements-only` ya da `execution: knowledge-work` | yanlış eser tipi |
+| plan requirements-only (ünite ya da doğrulama sözleşmesi yok, veya eski `artifact_readiness: requirements-only`), engelleyici açık soru var, ya da `execution: knowledge-work` | yanlış eser tipi |
 | çalışma ağacı kirli | kimin ne yazdığı ayırt edilemez |
 | plan ön incelemesi planı **uygulanamaz** buldu (`middle`/`high`) | fazlar yanlış plana karşı koşar |
 | `run-phase.sh` çıkış 3 (kayıtsız aşama, **kurtarma da tutmadı**) | aşamanın kaydı yok: ya hiçbir şey yapmadı ya da yaptığı iş **bilinmiyor** — ikisi de merge edilemez |

@@ -9,6 +9,9 @@
 # Nabız bloğu (süre + dokunulan dosyalar) CE_HEARTBEAT_SECS aralıkla ilerleme
 # günlüğüne düşer; başlangıç ve bitiş satırları her zaman yazılır.
 
+# KOŞARKEN DÜZENLEMEYE KARŞI: gövde tek bir { ... } bloğudur; bash bloğun
+# TAMAMINI çalıştırmadan önce okur. Gerekçe ve ölçüm run-phase.sh'te (2026-10-05).
+{
 set -uo pipefail
 
 label="${1:-}"
@@ -27,3 +30,4 @@ ce_heartbeat_stop
 el=$(( $(date +%s) - start ))
 ce_progress "BİTTİ '$label': çıkış $code ($((el / 60)) dk $((el % 60)) sn)"
 exit "$code"
+}

@@ -89,6 +89,12 @@
 #   3. Ön plan kuralı `--append-system-prompt` ile HER aşamaya (kurtarma
 #      dahil) betik tarafından eklenir; çağıranın prompt'una bağlı değildir.
 
+# KOŞARKEN DÜZENLEMEYE KARŞI: bash betiği satır satır diskten okur. Koşu
+# sırasında dosya değişirse (ör. başka bir oturum skill'i güncellerse) kaldığı
+# bayt ofsetinden yarım bir satıra çarpar — ölçüldü 2026-10-05: 'line 173:
+# syntax error near unexpected token fi', zarf kurtarma hiç koşmadı. Gövde tek
+# bir { ... } bloğudur: bash bloğun TAMAMINI çalıştırmadan önce okur.
+{
 set -euo pipefail
 
 stage_name="${1:-}"
@@ -281,3 +287,4 @@ fi
 
 ce_progress "BİTTİ aşama '$stage_name' (${duration}s) → $envelope_file"
 exit 0
+}
